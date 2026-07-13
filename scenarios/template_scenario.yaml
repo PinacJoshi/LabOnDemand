@@ -1,0 +1,74 @@
+scenario: "Network Isolation and Capability Testing Range"
+difficulty: "2"
+description: "A comprehensive range testing the new schema features."
+
+# --- NETWORK TOPOLOGY ---
+networks:
+  - name: "dmz_network"
+    driver: "bridge"
+    internal: false 
+  
+  - name: "internal_app_network"
+    driver: "bridge"
+    internal: false # Dropped packets to external WAN, perfectly isolated.
+  
+  - name: "secure_db_network"
+    driver: "bridge"
+    internal: true
+
+# --- DEFENDER WORKSPACE ---
+defender_workspace:
+  name: "analyst-desktop"
+  base_image: "pinacjoshi/labod-defender-base"
+  networks: 
+    - "internal_app_network"
+  exposed_port: 8080
+  
+  # Supported Images automatically get NET_ADMIN and NET_RAW. 
+  # We can add more or drop defaults here.
+  cap_add: 
+    - "SYS_ADMIN"
+  cap_drop: 
+    - "NET_RAW" # This will override and drop the default auto-injection
+    
+  build_modifiers:
+    install_packages: ["firefox", "tshark", "nano", "iptables"]
+    exec_command: >
+      echo "Workspace Booted.;
+      sleep infiniy;
+      
+# --- TARGET NODES---
+nodes:
+- name: "web-server"
+  base_image: "alpine:latest"
+  networks: 
+    - "dmz_network"
+    - "internal_app_network"
+    - "secure_db_network"
+  cap_add:
+    - "NET_ADMIN"
+  # FIX: Keep the container alive so it can receive multiple networks
+  exec_command: >
+    echo "Web Server Mock Active";
+    sleep infinity;
+
+- name: "mysql-database"
+  base_image: "alpine:latest"
+  networks: 
+    - "secure_db_network"
+  cap_drop:
+    - "ALL" 
+  # FIX: Keep the container alive
+  exec_command: >
+    echo "DB Mock Active";
+    sleep infinity;
+
+# --- ADVERSARY ---
+attacker_node:
+  name: "threat-actor"
+  base_image: "alpine:latest"
+  networks: 
+    - "dmz_network"
+  exec_command: >
+    echo 'Initiating C2 Beacons';
+    sleep infinity;

@@ -1,0 +1,13 @@
+# --- CONFIGURATION & GLOBAL VARIABLES ---
+
+# Core Tagging Strategy
+GLOBAL_MANAGEMENT_LABEL = "labod"
+GLOBAL_MANAGEMENT_LABEL_DOCKER = f"managed_by={GLOBAL_MANAGEMENT_LABEL}"
+
+# Fallbacks
+GLOBAL_DEFAULT_SCENARIO_NAME = "unnamed_scenario"
+GLOBAL_DEFAULT_SCENARIO_DESCRIPTION = "Description Not Specified"
+
+# Image & Capability Baselines
+SUPPORTED_DEFENDER_IMAGE_PREFIX = "pinacjoshi/labod"
+DEFAULT_DEFENDER_CAPS = ["NET_ADMIN", "NET_RAW"]
