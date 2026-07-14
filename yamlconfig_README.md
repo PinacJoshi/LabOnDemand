@@ -14,8 +14,8 @@ Every asset provisioned by the platform (networks, standard containers, custom w
 * `scenario=<scenario_slug>` (where the slugified name is generated via `scenario_name.lower().replace(" ", "_")`)
 
 When executing a teardown command via `main.py`, the engine operates in two specific modes:
-* **Surgical Mode (`labod decommission <config_path>`)**: Parses the target YAML file to compute the specific `scenario_slug` and drops matching containers, networks, and custom images.
-* **Global Nuke Mode (`labod decommission`)**: Bypasses local configuration files entirely. It queries the active Docker daemon and issues a global engine filter sweep matching `managed_by=labod` to wipe all active assets instantly, ensuring zero persistent disk or memory leakage.
+* **Scenario Decommission (`labod decommission <config_path>`)**: Parses the target YAML file to compute the specific `scenario_slug` and drops matching containers, networks, and custom images.
+* **Global Decommission (`labod decommission`)**: Bypasses local configuration files entirely. It queries the active Docker daemon and issues a global engine filter sweep matching `managed_by=labod` to wipe all active assets instantly, ensuring zero persistent disk or memory leakage.
 
 ### B. Multi-Homing Network Mechanics
 Docker natively restricts network attachment to a single interface during container creation. To achieve true multi-homing (nodes sitting simultaneously across multiple subnets, such as a dual-homed firewall or an adversary targeting an internal zone), the provisioning engine uses an array slicing model:
