@@ -32,12 +32,20 @@ def deploy(config_path, quitebuild):
     """
     Deploy isolated lab spaces dynamically from a single config
     """
+    config_data = dict()
 
     try:
         click.secho(f"[~] Loading configuration profile from: {config_path}", fg="cyan")
         config_data = parse_scenario(config_path)
         click.secho(f"[✓] Parsed configuration for: {config_path}", fg="green")
 
+    except Exception as e:
+        click.secho(f"[!] Invalid yaml config file provided", 
+                    fg="red", 
+                    bold=True)
+        return
+
+    try:
         launch_scenario(config_data, quitebuild)
         click.secho(
             "\n[SUCCESS] Lab infrastructure is live!",
@@ -45,7 +53,10 @@ def deploy(config_path, quitebuild):
             bold=True,
         )
     except Exception as e:
-        click.secho(f"\n[ERROR] Deployment failed: {e}", fg="red", bold=True)
+        click.secho(f"\n[ERROR] Deployment failed: {e}", 
+                    fg="red", 
+                    bold=True)
+        
         remove_depracted_nodes(config_path)
 
 
