@@ -39,10 +39,8 @@ def deploy(config_path, quitebuild):
         config_data = parse_scenario(config_path)
         click.secho(f"[✓] Parsed configuration for: {config_path}", fg="green")
 
-    except Exception as e:
-        click.secho(f"[!] Invalid yaml config file provided", 
-                    fg="red", 
-                    bold=True)
+    except Exception:
+        click.secho("[!] Invalid yaml config file provided", fg="red", bold=True)
         return
 
     try:
@@ -53,15 +51,12 @@ def deploy(config_path, quitebuild):
             bold=True,
         )
     except Exception as e:
-        click.secho(f"\n[ERROR] Deployment failed: {e}", 
-                    fg="red", 
-                    bold=True)
-        
+        click.secho(f"\n[ERROR] Deployment failed: {e}", fg="red", bold=True)
+
         remove_depracted_nodes(config_path)
 
 
 @cli.command()
-# Make required=False so the user can just type 'soc-lab destroy' blindly
 @click.argument(
     "config_path", type=click.Path(exists=True), required=False, default=None
 )
@@ -72,11 +67,19 @@ def decommission(config_path):
 
     if config_path:
         # --- MODE 1: Targeted Teardown ---
-        click.secho(f"[~] Loading configuration profile from: {config_path}", fg="cyan")
-        config_data = parse_scenario(config_path)
-        click.secho(f"[✓] Parsed configuration for: {config_path}", fg="green")
+        config_data = dict()
+        try:
+            click.secho(
+                f"[~] Loading configuration profile from: {config_path}", fg="cyan"
+            )
+            config_data = parse_scenario(config_path)
+            click.secho(f"[✓] Parsed configuration for: {config_path}", fg="green")
 
-        # Sequence is absolute: Containers first, then underlying images
+        except Exception:
+            click.secho("[!] Invalid yaml config file provided", fg="red", bold=True)
+            return
+
+        # Containers first then underlying images
         destruct(yaml_config=config_data)
 
         click.secho(
@@ -111,12 +114,20 @@ def decommission_images(config_path):
     """
 
     if config_path:
-        # --- MODE 1: Targeted Image Teardown ---
-        click.secho(f"[~] Loading configuration profile from: {config_path}", fg="cyan")
-        config_data = parse_scenario(config_path)
-        click.secho(f"[✓] Parsed configuration for: {config_path}", fg="green")
+        config_data = dict()
+        try:
+            click.secho(
+                f"[~] Loading configuration profile from: {config_path}", fg="cyan"
+            )
+            config_data = parse_scenario(config_path)
+            click.secho(f"[✓] Parsed configuration for: {config_path}", fg="green")
+
+        except Exception:
+            click.secho("[!] Invalid yaml config file provided", fg="red", bold=True)
+            return
 
         destruct_built_images(yaml_config=config_data)
+
         click.secho(
             "\n[SUCCESS] Scenario images purged cleanly.", fg="yellow", bold=True
         )
