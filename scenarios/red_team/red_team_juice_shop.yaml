@@ -1,0 +1,43 @@
+# =============================================================================
+# SOC Lab Builder - 02271 Red Team: OWASP Juice Shop
+# =============================================================================
+scenario: "red_team_juice_shop"
+
+networks:
+  - name: "vnc_host_bridge"
+    driver: "bridge"
+    internal: false
+  - name: "red_team_lan"
+    driver: "bridge"
+    internal: true
+
+nodes:
+  - name: "juice_shop_target"
+    base_image: "bkimminich/juice-shop:latest"
+    mem_limit: "1g"
+    cpus: 1.0
+    networks:
+      - "red_team_lan"
+
+defender_workspace:
+  name: "attacker_ui"
+  base_image: "pinacjoshi/labod-defender-base:latest"
+  mem_limit: "2g"
+  exposed_port: 8080
+  networks:
+    - "vnc_host_bridge"
+    - "red_team_lan"
+  build_modifiers:
+    mkdir:
+      - "/config/Desktop/Burp_Projects"
+
+instructions: |
+  # Exercise Initialization Complete: OWASP Juice Shop
+
+  Your interactive workspace is streaming at `http://localhost:{attacker_ui[port]}`.
+
+  You can find the Juice Shop Website by typing '{juice_shop_target[ip]}:3000' in Firefox URL Bar.
+
+  Primary Objectives:
+  1. Inspect `main.js` using the provided browser tools to uncover hidden API endpoints and paths.
+  2. Attempt to exploit DOM XSS vulnerabilities and perform API-based privilege escalations.
