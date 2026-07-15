@@ -14,10 +14,10 @@ These labels include `managed_by=labod` and `scenario=<scenario_slug>` (where th
 
 There are two teardown option, each mode is offered in decommission of both running scenario and to delete dynamically created docker images.
 
-* **Targetted Decommission Mode (`labod (decommission/decommission-images) <config_path>`)**: Parses the target YAML file to compute the specific `scenario_slug` and drops matching containers, networks, and custom images.
+* **Targetted Decommission Mode (`decommission/decommission-images <config_path>`)**: Parses the target YAML file to compute the specific `scenario_slug` and drops matching containers, networks, and custom images.
 
 
-* **Global Decommission Mode (`labod (decommission/decommission-images)`)**: Bypasses local configuration files entirely. It queries the active Docker daemon and issues a global engine filter sweep matching `managed_by=labod` to wipe all active assets instantly, ensuring zero persistent disk or memory leakage.
+* **Global Decommission Mode (`decommission/decommission-images`)**: Bypasses local configuration files entirely. It queries the active Docker daemon and issues a global engine filter sweep matching `managed_by=labod` to wipe all active assets instantly, ensuring zero persistent disk or memory leakage.
 
 
 

@@ -1,0 +1,45 @@
+# --- TARGET NODES---
+scenario: "template scenario test 2"
+difficulty: "2"
+description: "A comprehensive range testing the new schema features."
+
+networks:
+  - name: "dmz_network"
+    driver: "bridge"
+    internal: false 
+  - name: "secure_db_network"
+    driver: "bridge"
+
+nodes:
+- name: "web-server"
+  base_image: "alpine:latest"
+  mem_limit: "512m"
+  networks: 
+    - "dmz_network"
+  exec_command: >
+    echo "Web Server Mock Active";
+    sleep infinity;
+
+defender_workspace:
+  name: "mysql-database"
+  base_image: "pinacjoshi/labod-defender-base" # Must be a supported image to trigger mkfile hooks
+  networks: 
+    - "secure_db_network"
+  exposed_port: 8080
+  volumes: 
+    - "./data:/scenariodata:z"
+  build_modifiers:
+    mkdir: ["/config/secret_data", "/config/logs"]
+    mkfile: 
+      - path: "/config/secret_data/credentials.txt"
+        data: "root:supersecretpassword123!"
+      - path: "/config/hello.txt"
+        data: "Hello from the SOC Builder platform"
+
+instructions: |
+  Welcome to your assigned environment. 
+  
+  The web server is currently responding on IP: {web_server[ip]}
+  The database node has been assigned exactly {web_server[mem_limit]} of RAM.
+  
+  A custom flag has been seeded in the DB container file system under /config/secret_data.
