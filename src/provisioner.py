@@ -257,20 +257,32 @@ def _prepare_node_kwargs(
     if "exec_command" in node_data:
         run_kwargs["command"] = ["/bin/sh", "-c", node_data["exec_command"]]
 
+    # Hardened Volume Processing and Security Jail
     if "volumes" in node_data:
-        resolved_volumes = []
+        resolved_volumes = {}
         for vol in node_data["volumes"]:
             parts = vol.split(":")
-            if parts[0].startswith("."):
-                absolute_host_path = os.path.abspath(parts[0])
-                resolved_vol = (
-                    f"{absolute_host_path}:{parts[1]}:{parts[2]}"
-                    if len(parts) == 3
-                    else f"{absolute_host_path}:{parts[1]}"
-                )
-                resolved_volumes.append(resolved_vol)
-            else:
-                resolved_volumes.append(vol)
+            
+            # Guard against malformed volume strings
+            if len(parts) < 2:
+                click.secho(f"[!] Malformed volume definition: {vol}", fg="yellow")
+                continue
+                
+            host_path = parts[0]
+            if host_path.startswith("."):
+                host_path = os.path.abspath(host_path)
+                
+            container_path = parts[1]
+            
+            # Extract SELinux label or fallback to standard read-write
+            mode = parts[2] if len(parts) == 3 else "rw"
+            
+            # Map directly to the deterministic dictionary schema
+            resolved_volumes[host_path] = {
+                "bind": container_path,
+                "mode": mode
+            }
+            
         run_kwargs["volumes"] = resolved_volumes
 
     run_kwargs["mem_limit"] = node_data.get("mem_limit", "1g")

