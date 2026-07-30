@@ -1,5 +1,5 @@
 # =============================================================================
-# SOC Lab Builder - 02271 Red Team: OWASP Juice Shop
+# Lab On Demand - Red Team: OWASP Juice Shop
 # =============================================================================
 scenario: "red_team_juice_shop"
 
@@ -30,6 +30,9 @@ defender_workspace:
   build_modifiers:
     mkdir:
       - "/config/Desktop/Burp_Projects"
+    mkfile:
+      - path: "/config/Desktop/Burp_Projects/demo.txt"
+        data: "This is a Live Demo!"
 
 instructions: |
   # Exercise Initialization Complete: OWASP Juice Shop

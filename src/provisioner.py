@@ -259,65 +259,30 @@ def _prepare_node_kwargs(
 
     # Hardened Volume Processing and Security Jail
     if "volumes" in node_data:
-        resolved_volumes = []
-
-        # Locate project-relative data directory
-        project_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.join(project_dir, "data")
-        os.makedirs(data_dir, exist_ok=True)
-
+        resolved_volumes = {}
         for vol in node_data["volumes"]:
             parts = vol.split(":")
+            
+            # Guard against malformed volume strings
             if len(parts) < 2:
-                click.secho(
-                    f"[!] Invalid volume format: {vol}. Must be 'host_path:container_path'",
-                    fg="red",
-                )
+                click.secho(f"[!] Malformed volume definition: {vol}", fg="yellow")
                 continue
-
-            user_host_path = parts[0]
+                
+            host_path = parts[0]
+            if host_path.startswith("."):
+                host_path = os.path.abspath(host_path)
+                
             container_path = parts[1]
-
-            # Normalize user-supplied host paths to ensure they stay relative to the sandbox
-            clean_path = user_host_path
-            if clean_path.startswith("./"):
-                clean_path = clean_path[2:]
-
-            # If the user targets "." or "data" directly, map to the root of the sandbox directory
-            if clean_path in [".", "data"]:
-                clean_path = ""
-            elif clean_path.startswith("data/"):
-                clean_path = clean_path[5:]
-
-            # Resolve finalized target host path strictly inside the project data boundary
-            resolved_host_path = os.path.abspath(os.path.join(data_dir, clean_path))
-
-            # Path Traversal Guardrail: Assert resolved path is inside data_dir
-            if os.path.commonpath([data_dir, resolved_host_path]) != data_dir:
-                click.secho(
-                    f"[!] SECURITY DEFENSE BLOCK: Prevented directory traversal attempt from '{user_host_path}'.",
-                    fg="red",
-                    bold=True,
-                    err=True,
-                )
-                raise PermissionError(
-                    f"Directory traversal defense triggered. Blocked path: {user_host_path}"
-                )
-
-            # Safe auto-directory generation on host before engine mount
-            os.makedirs(resolved_host_path, exist_ok=True)
-
-            # SELinux Compliance (injecting :z safely)
-            if len(parts) == 3:
-                mode = parts[2]
-                if "z" not in mode.lower():
-                    mode = f"{mode},z"
-            else:
-                mode = "rw,z"
-
-            resolved_vol = f"{resolved_host_path}:{container_path}:{mode}"
-            resolved_volumes.append(resolved_vol)
-
+            
+            # Extract SELinux label or fallback to standard read-write
+            mode = parts[2] if len(parts) == 3 else "rw"
+            
+            # Map directly to the deterministic dictionary schema
+            resolved_volumes[host_path] = {
+                "bind": container_path,
+                "mode": mode
+            }
+            
         run_kwargs["volumes"] = resolved_volumes
 
     run_kwargs["mem_limit"] = node_data.get("mem_limit", "1g")
