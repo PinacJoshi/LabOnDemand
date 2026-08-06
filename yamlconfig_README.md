@@ -78,9 +78,9 @@ These configuration choices apply uniformly across standard infrastructure nodes
 | `mem_limit` | `String` | Optional | Positive integer followed by `m` or `g` | `"1g"` | Strict blast-radius memory ceiling preventing individual systems from exhausting host hardware. |
 | `cpus` | `Float` | Optional | `0.1` to maximum available host logic cores | `1.0` | Defines fractional CPU allocations. Converted to nano-CPUs (`int(cpus * 1e9)`) to throttle processing speed. |
 | `exec_command` | `String` | Optional | Valid Linux shell script / command sequence | N/A | Forces execution of a persistent process or routine upon container boot. Evaluated safely inside `["/bin/sh", "-c", exec_command]`. |
-| `cap_add` | `List[String]` | Optional | Valid Linux Capabilities | `[]` | Grants advanced kernel execution privileges to the container space. |
-| `cap_drop` | `List[String]` | Optional | Valid Linux Capabilities | `[]` | Strips standard container permissions to model hardened environments or enforce restriction constraints. |
-| `volumes` | `List[String]` | Optional | Host/Container absolute paths or relative syntax | `[]` | Mounts local file directories into the container. Relative declarations starting with `.` are automatically resolved to raw absolute paths before execution. |
+| `cap_add` | `List[String]` | Optional | Valid Linux Capabilities | N/A | Grants advanced kernel execution privileges to the container space. |
+| `cap_drop` | `List[String]` | Optional | Valid Linux Capabilities | N/A | Strips standard container permissions to model hardened environments or enforce restriction constraints. |
+| `volumes` | `List[String]` | Optional | Relative Path inside `data` folder in project directory | N/A | Mounts local `data` folder in project directory into the container.  |
 | `build_modifiers` | `Block / List` | Optional | Conditional based on `base_image` | N/A | Instructs the custom made defender workspace image framework to compile a unique, scenario-specific image variant in memory before running. |
 
 ---

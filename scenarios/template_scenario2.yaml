@@ -27,7 +27,7 @@ defender_workspace:
     - "secure_db_network"
   exposed_port: 8080
   volumes: 
-    - "./data:/scenariodata:z"
+    - "scenario:/scenariodata:z"
   build_modifiers:
     mkdir: ["/config/secret_data", "/config/logs"]
     mkfile: 

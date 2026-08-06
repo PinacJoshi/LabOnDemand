@@ -260,6 +260,10 @@ def _prepare_node_kwargs(
     # Hardened Volume Processing and Security Jail
     if "volumes" in node_data:
         resolved_volumes = {}
+        
+        # Enforce the sandbox boundary strictly to $PWD/data
+        safe_base_dir = os.path.abspath(os.path.join(os.getcwd(), "data"))
+        
         for vol in node_data["volumes"]:
             parts = vol.split(":")
             
@@ -268,17 +272,33 @@ def _prepare_node_kwargs(
                 click.secho(f"[!] Malformed volume definition: {vol}", fg="yellow")
                 continue
                 
-            host_path = parts[0]
-            if host_path.startswith("."):
-                host_path = os.path.abspath(host_path)
-                
+            # Strip leading slashes to prevent os.path.join from treating it as an absolute root path
+            requested_dir = parts[0].lstrip("/")
             container_path = parts[1]
-            
-            # Extract SELinux label or fallback to standard read-write
             mode = parts[2] if len(parts) == 3 else "rw"
             
+            # Resolve the requested path against the safe base directory
+            target_host_path = os.path.abspath(os.path.join(safe_base_dir, requested_dir))
+            
+            # Path Traversal Guard: Ensure the resolved path does not mathematically escape the sandbox
+            if not target_host_path.startswith(safe_base_dir):
+                click.secho(
+                    f"[!] Security Violation: Volume mount '{parts[0]}' attempts to escape the restricted data directory. Dropping mount.", 
+                    fg="red", 
+                    bold=True
+                )
+                continue
+                
+            # Pre-initialize the directory on the host to prevent the Docker daemon from creating it as root
+            if not os.path.exists(target_host_path):
+                try:
+                    os.makedirs(target_host_path, exist_ok=True)
+                except OSError as e:
+                    click.secho(f"[!] Could not pre-initialize host directory {target_host_path}: {e}", fg="red", err=True, bold=True)
+                    continue
+            
             # Map directly to the deterministic dictionary schema
-            resolved_volumes[host_path] = {
+            resolved_volumes[target_host_path] = {
                 "bind": container_path,
                 "mode": mode
             }
