@@ -111,5 +111,5 @@ To learn how to design, customize, or modify scenario deployment manifests, plea
 ```
 
 
-## Current Known Bugs
-- `volumes` parameter in yaml config maps the volume to the defender base but the user can't interact with the files due to wrong Linux Group.
+## Current Development
+- Make more scenario yaml configs
